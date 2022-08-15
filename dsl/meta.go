@@ -127,6 +127,18 @@ import (
 //	    Meta("protoc:include", "/usr/local/include/google/protobuf")
 //	})
 //
+// - "proto:option" allows to add protobuf option directives
+// to methods and service definitions.
+//
+//
+//    var _ = Service("service1", func() {
+//        Meta("proto:option", "my_option_svc", `"Hello world!"`)
+//
+//        Method("MyMethod", func() {
+//        	Meta("proto:option", "my_option_rpc", "{type: QUERY}")
+//        })
+//    })
+//
 // - "swagger:generate" DEPRECATED, use "openapi:generate" instead.
 //
 // - "openapi:generate" specifies whether OpenAPI specification should be

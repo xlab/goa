@@ -16,6 +16,8 @@ type (
 		ParentName string
 		// ProtoPkg is the name of the generated protobuf package.
 		ProtoPkg string
+		// ProtoOptions
+		ProtoOptions []*GRPCProtoOption
 		// GRPCEndpoints is the list of service endpoints.
 		GRPCEndpoints []*GRPCEndpointExpr
 		// GRPCErrors lists gRPC errors that apply to all endpoints.
@@ -25,6 +27,11 @@ type (
 		Meta MetaExpr
 	}
 )
+
+type GRPCProtoOption struct {
+	Tag   string
+	Value string
+}
 
 // Name of service (service)
 func (svc *GRPCServiceExpr) Name() string {

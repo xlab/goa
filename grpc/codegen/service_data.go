@@ -27,6 +27,8 @@ type (
 		PkgName string
 		// ProtoImports is the list of proto package imports.
 		ProtoImports []string
+		// ProtoOptions is the list of all attached protobuf options for this service.
+		ProtoOptions []*codegen.ProtoOptionSpec
 		// Name is the service name.
 		Name string
 		// Description is the service description.
@@ -454,6 +456,15 @@ func (ServicesData) analyze(gs *expr.GRPCServiceExpr) *ServiceData {
 		}
 		seen, imported = make(map[string]struct{}), make(map[string]struct{})
 	}
+
+	// handle proto options of a service
+	for _, protoOptionExpr := range gs.ProtoOptions {
+		sd.Service.ProtoOptions = append(sd.Service.ProtoOptions, &codegen.ProtoOptionSpec{
+			Tag:   protoOptionExpr.Tag,
+			Value: protoOptionExpr.Value,
+		})
+	}
+
 	for _, e := range gs.GRPCEndpoints {
 		// convert request and response types to protocol buffer message types
 		e.Request = makeProtoBufMessage(e.Request, protoBufify(e.Name()+"_request", true, true), sd)
@@ -522,6 +533,14 @@ func (ServicesData) analyze(gs *expr.GRPCServiceExpr) *ServiceData {
 					continue
 				}
 				collect(er.Response.Message)
+			}
+
+			// handle proto options of a method
+			for _, protoOptionExpr := range e.ProtoOptions {
+				md.ProtoOptions = append(md.ProtoOptions, &codegen.ProtoOptionSpec{
+					Tag:   protoOptionExpr.Tag,
+					Value: protoOptionExpr.Value,
+				})
 			}
 		}
 
@@ -617,6 +636,7 @@ func (ServicesData) analyze(gs *expr.GRPCServiceExpr) *ServiceData {
 				}
 			}
 		}
+
 		ed := &EndpointData{
 			ServiceName:      svc.Name,
 			PkgName:          sd.PkgName,

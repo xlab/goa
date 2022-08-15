@@ -32,6 +32,14 @@ type (
 		// folder.
 		RelImportPath string
 	}
+
+	// ProtoOptionSpec defines a protobuf option directive.
+	ProtoOptionSpec struct {
+		// Tag defines the option tag name, usually a package.
+		Tag string
+		// Value defines the option value.
+		Value string
+	}
 )
 
 // NewImport creates an import spec.

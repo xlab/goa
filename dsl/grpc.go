@@ -137,6 +137,22 @@ func Package(name string) {
 	}
 }
 
+// Option
+func Option(tag, value string) {
+	switch actual := eval.Current().(type) {
+	case *expr.GRPCServiceExpr:
+		actual.ProtoOptions = append(actual.ProtoOptions, &expr.GRPCProtoOption{
+			Tag: tag, Value: value,
+		})
+	case *expr.GRPCEndpointExpr:
+		actual.ProtoOptions = append(actual.ProtoOptions, &expr.GRPCProtoOption{
+			Tag: tag, Value: value,
+		})
+	default:
+		eval.IncompatibleDSL()
+	}
+}
+
 // Message describes a gRPC request or response message.
 //
 // Message must appear in a gRPC method expression to define the

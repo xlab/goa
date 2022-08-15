@@ -28,6 +28,8 @@ type (
 		Metadata *MappedAttributeExpr
 		// Requirements is the list of security requirements for the gRPC endpoint.
 		Requirements []*SecurityExpr
+		// ProtoOptions
+		ProtoOptions []*GRPCProtoOption
 		// Meta is a set of key/value pairs with semantic that is
 		// specific to each generator, see dsl.Meta.
 		Meta MetaExpr

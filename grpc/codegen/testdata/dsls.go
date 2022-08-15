@@ -975,3 +975,17 @@ var DefaultFieldsDSL = func() {
 		})
 	})
 }
+
+var ServiceWithProtoOptionDSL = func() {
+	Service("ServiceWithProtoOption", func() {
+		GRPC(func() {
+			Option("deprecated", "false")
+		})
+
+		Method("ServiceWithProtoOptionMethod", func() {
+			GRPC(func() {
+				Option("deprecated", "true")
+			})
+		})
+	})
+}

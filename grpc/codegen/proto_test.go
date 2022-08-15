@@ -25,6 +25,7 @@ func TestProtoFiles(t *testing.T) {
 		{"protofiles-multiple-methods-same-return-type", testdata.MultipleMethodsSameResultCollectionDSL, testdata.MultipleMethodsSameResultCollectionProtoCode},
 		{"protofiles-method-with-acronym", testdata.MethodWithAcronymDSL, testdata.MethodWithAcronymProtoCode},
 		{"protofiles-custom-package-name", testdata.ServiceWithPackageDSL, testdata.ServiceWithPackageCode},
+		{"protofiles-service-with-proto-option", testdata.ServiceWithProtoOptionDSL, testdata.ServiceWithProtoOptionCode},
 		{"protofiles-struct-meta-type", testdata.StructMetaTypeDSL, testdata.StructMetaTypePackageCode},
 		{"protofiles-default-fields", testdata.DefaultFieldsDSL, testdata.DefaultFieldsPackageCode},
 	}

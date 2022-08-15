@@ -80,7 +80,8 @@ type (
 		// ProtoImports lists the import specifications for the custom
 		// proto types used by the service.
 		ProtoImports []*codegen.ImportSpec
-
+		// ProtoOptions is the list of all attached protobuf options for this service.
+		ProtoOptions []*codegen.ProtoOptionSpec
 		// userTypes lists the type definitions that the service depends on.
 		userTypes []*UserTypeData
 		// errorTypes lists the error type definitions that the service depends on.
@@ -214,6 +215,8 @@ type (
 		// result and response body reader when SkipResponseBodyEncodeDecode is
 		// used.
 		ResponseStruct string
+		// ProtoOptions is the list of all attached protobuf options for this service.
+		ProtoOptions []*codegen.ProtoOptionSpec
 	}
 
 	// StreamData is the data used to generate client and server interfaces that
