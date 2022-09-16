@@ -120,6 +120,18 @@ func removeMeta(att *expr.AttributeExpr) {
 	})
 }
 
+func wrappedFieldNameFromMeta(source, target *expr.AttributeExpr) string {
+	name, ok := source.Meta.Last("struct:field:proto:wrapper")
+	if !ok {
+		name, ok = target.Meta.Last("struct:field:proto:wrapper")
+		if !ok {
+			return "Field"
+		}
+	}
+
+	return codegen.CamelCase(name, true, false)
+}
+
 // transformAttribute returns the code to initialize a target data structure
 // from an instance of source data structure. It returns an error if source and
 // target are not compatible for transformation (different types, fields of
@@ -130,16 +142,18 @@ func transformAttribute(source, target *expr.AttributeExpr, sourceVar, targetVar
 		err      error
 	)
 
+	wrappedFieldName := wrappedFieldNameFromMeta(source, target)
+
 	if err := codegen.IsCompatible(source.Type, target.Type, sourceVar, targetVar); err != nil {
 		if ta.proto {
 			name := ta.TargetCtx.Scope.Name(target, ta.TargetCtx.Pkg(target), ta.TargetCtx.Pointer, ta.TargetCtx.UseDefault)
 			initCode += fmt.Sprintf("%s := &%s{}\n", targetVar, name)
-			targetVar += ".Field"
+			targetVar += "." + wrappedFieldName
 			newVar = false
 			target = unwrapAttr(expr.DupAtt(target))
 		} else {
 			source = unwrapAttr(expr.DupAtt(source))
-			sourceVar += ".Field"
+			sourceVar += "." + wrappedFieldName
 		}
 		if err = codegen.IsCompatible(source.Type, target.Type, sourceVar, targetVar); err != nil {
 			return "", err
@@ -162,9 +176,9 @@ func transformAttribute(source, target *expr.AttributeExpr, sourceVar, targetVar
 	{
 		switch {
 		case expr.IsArray(source.Type):
-			code, err = transformArray(expr.AsArray(source.Type), expr.AsArray(target.Type), sourceVar, targetVar, newVar, ta)
+			code, err = transformArray(expr.AsArray(source.Type), expr.AsArray(target.Type), sourceVar, targetVar, newVar, ta, wrappedFieldName)
 		case expr.IsMap(source.Type):
-			code, err = transformMap(expr.AsMap(source.Type), expr.AsMap(target.Type), sourceVar, targetVar, newVar, ta)
+			code, err = transformMap(expr.AsMap(source.Type), expr.AsMap(target.Type), sourceVar, targetVar, newVar, ta, wrappedFieldName)
 		case expr.IsObject(source.Type):
 			code, err = transformObject(source, target, sourceVar, targetVar, newVar, ta)
 		case expr.IsUnion(source.Type):
@@ -299,9 +313,11 @@ func transformObject(source, target *expr.AttributeExpr, sourceVar, targetVar st
 			_, isUserType := srcc.Type.(expr.UserType)
 			switch {
 			case expr.IsArray(srcc.Type):
-				code, err = transformArray(expr.AsArray(srcc.Type), expr.AsArray(tgtc.Type), srcVar, tgtVar, false, ta)
+				wrappedFieldName := wrappedFieldNameFromMeta(srcc, tgtc)
+				code, err = transformArray(expr.AsArray(srcc.Type), expr.AsArray(tgtc.Type), srcVar, tgtVar, false, ta, wrappedFieldName)
 			case expr.IsMap(srcc.Type):
-				code, err = transformMap(expr.AsMap(srcc.Type), expr.AsMap(tgtc.Type), srcVar, tgtVar, false, ta)
+				wrappedFieldName := wrappedFieldNameFromMeta(srcc, tgtc)
+				code, err = transformMap(expr.AsMap(srcc.Type), expr.AsMap(tgtc.Type), srcVar, tgtVar, false, ta, wrappedFieldName)
 			case isUserType:
 				if ta.TargetCtx.IsInterface {
 					ref := ta.TargetCtx.Scope.Ref(target, ta.TargetCtx.Pkg(target))
@@ -387,7 +403,7 @@ func transformObject(source, target *expr.AttributeExpr, sourceVar, targetVar st
 // transformArray returns the code to transform source attribute of array
 // type to target attribute of array type. It returns an error if source
 // and target are not compatible for transformation.
-func transformArray(source, target *expr.Array, sourceVar, targetVar string, newVar bool, ta *transformAttrs) (string, error) {
+func transformArray(source, target *expr.Array, sourceVar, targetVar string, newVar bool, ta *transformAttrs, wrappedFieldName string) (string, error) {
 	elem := target.ElemType
 	if ta.proto {
 		elem = unAlias(elem)
@@ -411,10 +427,10 @@ func transformArray(source, target *expr.Array, sourceVar, targetVar string, new
 	}
 	if ta.wrapped {
 		if ta.proto {
-			targetVar += ".Field"
+			targetVar += "." + wrappedFieldName
 			newVar = false
 		} else {
-			sourceVar += ".Field"
+			sourceVar += "." + wrappedFieldName
 		}
 		ta.wrapped = false
 	}
@@ -461,7 +477,7 @@ func transformArray(source, target *expr.Array, sourceVar, targetVar string, new
 // transformMap returns the code to transform source attribute of map
 // type to target attribute of map type. It returns an error if source
 // and target are not compatible for transformation.
-func transformMap(source, target *expr.Map, sourceVar, targetVar string, newVar bool, ta *transformAttrs) (string, error) {
+func transformMap(source, target *expr.Map, sourceVar, targetVar string, newVar bool, ta *transformAttrs, wrappedFieldName string) (string, error) {
 	// Target map key cannot be nested in protocol buffers. So no need to worry
 	// about unwrapping.
 	if err := codegen.IsCompatible(source.KeyType.Type, target.KeyType.Type, sourceVar+"[key]", targetVar+"[key]"); err != nil {
@@ -495,10 +511,10 @@ func transformMap(source, target *expr.Map, sourceVar, targetVar string, newVar 
 	}
 	if ta.wrapped {
 		if ta.proto {
-			targetVar += ".Field"
+			targetVar += "." + wrappedFieldName
 			newVar = false
 		} else {
-			sourceVar += ".Field"
+			sourceVar += "." + wrappedFieldName
 		}
 		ta.wrapped = false
 	}
@@ -965,7 +981,7 @@ func dupTransformAttrs(ta *transformAttrs) *transformAttrs {
 }
 
 const (
-	transformGoArrayTmpl = `{{ .TargetVar }} {{ if .NewVar }}:={{ else }}={{ end }} make([]{{ .ElemTypeRef }}, len({{ .SourceVar }})) 
+	transformGoArrayTmpl = `{{ .TargetVar }} {{ if .NewVar }}:={{ else }}={{ end }} make([]{{ .ElemTypeRef }}, len({{ .SourceVar }}))
 for {{ .LoopVar }}{{ if .ValVar }}, {{ .ValVar }}{{ end }} := range {{ .SourceVar }} {
   {{ transformAttribute .SourceElem .TargetElem "val" (printf "%s[%s]" .TargetVar .LoopVar) false .TransformAttrs -}}
 }

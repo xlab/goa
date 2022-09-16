@@ -141,11 +141,16 @@ func makeProtoBufMessageR(att *expr.AttributeExpr, tname *string, sd *ServiceDat
 // wrapAttr makes the attribute type a user type by wrapping the given
 // attribute into an attribute named "field".
 func wrapAttr(att *expr.AttributeExpr, tname string, req bool, sd *ServiceData) {
+	wrapFieldName := "field"
+	if name, ok := att.Meta.Last("struct:field:proto:wrapper"); ok {
+		wrapFieldName = name
+	}
+
 	wrap := func(attr *expr.AttributeExpr) *expr.AttributeExpr {
 		res := &expr.AttributeExpr{
 			Type: &expr.Object{
 				&expr.NamedAttributeExpr{
-					Name: "field",
+					Name: wrapFieldName,
 					Attribute: &expr.AttributeExpr{
 						Type:       attr.Type,
 						Meta:       expr.MetaExpr{"rpc:tag": []string{"1"}},
@@ -181,7 +186,12 @@ func wrapAttr(att *expr.AttributeExpr, tname string, req bool, sd *ServiceData) 
 // unwrapAttr returns the attribute under the attribute name "field".
 // If "field" does not exist, it returns the given attribute.
 func unwrapAttr(att *expr.AttributeExpr) *expr.AttributeExpr {
-	if a := att.Find("field"); a != nil {
+	wrapFieldName := "field"
+	if name, ok := att.Meta.Last("struct:field:proto:wrapper"); ok {
+		wrapFieldName = name
+	}
+
+	if a := att.Find(wrapFieldName); a != nil {
 		return a
 	}
 	return att

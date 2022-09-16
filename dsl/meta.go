@@ -103,6 +103,15 @@ import (
 //	    })
 //	})
 //
+// - "struct:field:proto:wrapper" allows to override the generated protobuf field name
+// when user type is being wrapped. Defaults to "field".
+//
+//	Method("MyTypes_ListAll", func() {
+//		Result(CollectionOf(MyType), func() {
+//			Meta("struct:field:proto:wrapper", "my_type")
+//		})
+//	})
+//
 // - "struct:tag:xxx" sets a generated Go struct field tag and overrides tags
 // that Goa would otherwise set. If the metadata value is a slice then the
 // strings are joined with the space character as separator. Applicable to
@@ -130,14 +139,13 @@ import (
 // - "proto:option" allows to add protobuf option directives
 // to methods and service definitions.
 //
+//	var _ = Service("service1", func() {
+//	    Meta("proto:option", "my_option_svc", `"Hello world!"`)
 //
-//    var _ = Service("service1", func() {
-//        Meta("proto:option", "my_option_svc", `"Hello world!"`)
-//
-//        Method("MyMethod", func() {
-//        	Meta("proto:option", "my_option_rpc", "{type: QUERY}")
-//        })
-//    })
+//	    Method("MyMethod", func() {
+//	    	Meta("proto:option", "my_option_rpc", "{type: QUERY}")
+//	    })
+//	})
 //
 // - "swagger:generate" DEPRECATED, use "openapi:generate" instead.
 //
@@ -147,22 +155,6 @@ import (
 //
 //	var _ = Service("MyService", func() {
 //	    Meta("openapi:generate", "false")
-//	})
-//
-// - "openapi:json:prefix" specifies the prefix used to format the OpenAPI
-// specification encoded in JSON. It can be used with "openapi:json:indent".
-// Applicable to API only.
-//
-//	var _ = API("MyAPI", func() {
-//	    Meta("openapi:json:prefix", "  ")
-//	})
-//
-// - "openapi:json:indent" specifies the indent used to format the OpenAPI
-// specification encoded in JSON. It can be used with "openapi:json:prefix".
-// Applicable to API only.
-//
-//	var _ = API("MyAPI", func() {
-//	    Meta("openapi:json:indent", "  ")
 //	})
 //
 // - "swagger:summary" DEPRECATED, use "openapi:summary" instead
